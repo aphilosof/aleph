@@ -231,7 +231,7 @@ var tooltip = d3.select("body")
     var focus0 = focus; focus = d;
 
     var transition = d3.transition()
-        .duration(d3.event.altKey ? 7500 : 750)
+        .duration(d3.event.altKey ? 750 : 75)
         .tween("zoom", function(d) {
           var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
           return function(t) { zoomTo(i(t)); };
