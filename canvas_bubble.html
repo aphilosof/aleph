@@ -1,20 +1,17 @@
 <!doctype html>
 <html>
-  <head>
+ <head>
   <meta charset="utf-8">
-    <script src="https://d3js.org/d3.v5.js"></script>
+   <script src="https://d3js.org/d3.v5.js"></script>
     <style>
-     /* body, html {
-        margin: 10;
-      }*/
-      
-      .node {
+ .node {
   cursor: pointer;
 }
 
 .node:hover {
-  stroke: #000;
-  stroke-width: 1.5px;
+ 
+  stroke-width: 2.5px;
+
 }
      canvas {
         position: absolute;
@@ -22,22 +19,22 @@
         height: 700px;
       }
       svg {
+        
         position: absolute;
         width: 700px;
         height:700px;
       }    
       
-      
+
 .label,
 .node--root,
-.node--leaf {
-  pointer-events: none;
+.node--leaf:hover {
+fill: black
 }
+/*  pointer-events: none;
+*/
 
-<select id="select-color">
-    <option value="viral"></option>
-</select>
- 
+
 
 .label {
   font: 15px "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -45,30 +42,38 @@
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
 
-  
-    </style>
-  </head>
-  <body>
-    <canvas height="800" width="1200"></canvas>
-    <svg style="height: 700; width: 700}"></svg>
-    <div id="chart"></div>
-    
-    <select id="select-color">
-     <option value="none">None</option>
-    <option value="viral">Viral</option>
-     <option value="microbial">Microbial</option>
-    
-</select>
-    <script>
+  </style>
+ </head>
+<body>
 
+	<canvas height="800" width="1200"></canvas>
+    
+    <svg style="height: 700; width: 700}"></svg>
+    
+    <div id="chart">
+    	<h1>Circle packing of Metabat bins - all contigs</h1>
+	    <p style="font-size:90%; position:absolute; top:300px; left:720px ; width:50%; 			     text-align:left" >
+  			Metabat bining of all assembled contigs >=5000bp with coverage from all samples.
+ 			 <br>Use dropdown menu to color by Viras/Bacteria assignment.</br>
+  			<br>Bacteria - based on checkM.
+ 			 Virus - based on chevkV.</br>
+  			<br>Hover over a circle for name and info.</br></p>
+  	</div>
+
+ 	<select id="select-color">
+    	<option value="none">None</option>
+    	<option value="viral">Viral</option>
+        <option value="microbial">Microbial</option>
+        <option value="root">root</option>
+    </select>
+<script>
 
 
 
  var width = 700,
-	height = 700;
+	 height = 700;
  
-// var diameter = Math.min(width*0.9, height*0.9),
-//				radius = diameter / 2;
+
 				
 var diameter = Math.min(width*1, height*1),
 				radius = diameter;
@@ -97,25 +102,23 @@ var diameter = Math.min(width*1, height*1),
 		 	.attr("id", "canvas")
 			.attr("width", width)
 			.attr("height", height);
-			//.style('position', 'absolute').style('top', margin.top+'px').style('left', margin.left+'px');
-			
-			
+
+ 
  const svg = d3.select("#chart").append("svg")
     	.attr("width", width)
     	.attr("height", height)
     	.style("position", "relative");
     
  var g = svg.append("g")
-		//.attr("transform", "translate(0, 0) scale(1)");
-		//margin = 20,
+
     	diameter = +svg.attr("width"),
    		g = svg.append("g").attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
 		
-var tooltip = d3.select("body")
+ var tooltip = d3.select("body")
 	.append("div")
 	.style("position", "absolute")
-	.style("z-index", "50")
-	.style("visibility", "hidden")
+	.style("z-index", "1000")
+	.style("visibility", "hidden");
 			
  var context = canvas.node().getContext("2d")
 	   	context.clearRect(0, 0, width, height);
@@ -126,12 +129,11 @@ var tooltip = d3.select("body")
  
  
  var colorSelect = d3.select("#select-color")
-    	.on("change", function() {
-        	let colorOption = colorSelect.property('value')
+     .on("change", function() {
+     	let colorOption = colorSelect.property('value')
         	d3.selectAll('circle')
           	.transition()
-          	.duration(750)
-          	//.property("selected", function(d){ return d === defaultOptionName; })
+          	.duration(1800)
             .style('fill', function(d){
             	if(!d.children) {
             	if (colorOption == "none") {
@@ -146,9 +148,6 @@ var tooltip = d3.select("body")
                 else if (colorOption == "root") {
                    return d.data.tax == 'root' ? "Green" : "white"
                 }
-                //else if (colorOption == "none") {
-                  //  return "white"
-                //}
               }
             	else {
                 return "null"
@@ -159,11 +158,8 @@ var tooltip = d3.select("body")
  
  
  ///////////////////////////////////////////
- d3.json("metabat_defualt_all_assemblies_Bins_for_circle_packing.json")
-  .then(function(data) {
+  d3.json("metabat_defualt_all_assemblies_Bins_for_circle_packing.txt").then(function(data)   	{
   
-
- 
   const root = pack(data);
   
   var focus = root,
@@ -177,40 +173,42 @@ var tooltip = d3.select("body")
   
   
   var dataBinding = dataContainer.selectAll(".node")
-				.data(nodes)
-				.enter().append("circle")
-				.attr("class", function(d,i) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-				.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; })
-				.attr("r", function(d) { return d.r; })
-				.attr("fill", function(d) { return d.children ? colorCircle(d.depth) : "white"; 
-				});
+		.data(nodes)
+		.enter().append("circle")
+		.attr("class", function(d,i) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
+		.attr("cx", function(d) { return d.x; })
+		.attr("cy", function(d) { return d.y; })
+		.attr("r", function(d) { return d.r; });
+		//.attr("fill", function(d) { return d.children ? colorCircle(d.depth) : "white"; 
+		//});
 				        
-  dataBinding.each(function(d) { 
-				//Select one of the nodes/circles
-				var node = d3.select(this);
-
+  	    dataBinding.each(function(d) { 
+	   	var node = d3.select(this);
 				//Draw each circle
-				context.fillStyle = node.attr("fill");
-				context.beginPath();
-				context.arc(node.attr("cx"), node.attr("cy"), node.attr("r"), 0,  2 * Math.PI, true);
-				context.fill();
-				context.closePath();
+			context.fillStyle = node.attr("fill");
+			context.beginPath();
+			context.arc(node.attr("cx"), node.attr("cy"), node.attr("r"), 0,  2 * Math.PI, true);
+			context.fill();
+			context.closePath();
 		});
 
   
   var circle = g.selectAll("circle")
-    .data(nodes)
-    .enter().append("circle")
+      .data(nodes)
+      .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-      //.style("fill", function(d) { return d.children ? color(d.depth) : 'white'; })
+      //.style("fill", 'white' })
       .style("stroke", "black")
       .attr("stroke-width", 0.2)
-      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); })
-	  .on("mouseover", function(d){return tooltip.text(d.data.name).style("visibility", "visible");})
-	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-	.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
-	.style("fill", function(d) { return d.children ? color(d.depth) : 'white'; });
+      .style("fill", function(d) { return d.children ? color(d.depth) : 'white'; })
+      .on('mouseover', handleMouseover)
+	  //.on("mouseover", function(d){return tooltip.text(d.data.name).style("visibility", "visible");})
+	  //.on("mouseover", function(d){return tooltip.text(d.data.name).style("visibility", "visible");})
+	  //.on("mouseover", function(d) {d3.select(this).transition().style("fill", "pink");})
+	  .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+	  .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+	  .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+	
 	/*var text = g.selectAll("text")
     .data(nodes)
     .enter().append("text")
@@ -231,7 +229,7 @@ var tooltip = d3.select("body")
     var focus0 = focus; focus = d;
 
     var transition = d3.transition()
-        .duration(d3.event.altKey ? 750 : 750)
+        .duration(d3.event.altKey ? 750 : 50)
         .tween("zoom", function(d) {
           var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
           return function(t) { zoomTo(i(t)); };
@@ -249,9 +247,17 @@ var tooltip = d3.select("body")
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
     circle.attr("r", function(d) { return d.r * k; });
   }
-
-		
-
+  
+  
+ function handleMouseover(d) {
+  console.log("mouserover", this);
+  return tooltip.text(d.data.name).style("visibility", "visible");
+	//d3.selectAll('circle').style('fill', 'pink');
+	var circle = d3.select(this).select("circle");
+    circle.transition().duration(500).attr("r", d => d.r*2);
+	}
+    
+ console.log(root);
 
 			
 })
